@@ -17,7 +17,7 @@ Take note of the installation directory, e.g.
 cat /etc/pam.d/deviceauthgrant
 
 auth    required        pam_nologin.so
-auth    sufficient      [debug] [qrcode] [agentconf=/full/path/to/pam_deviceauthgrant/conf/file.json]
+auth    sufficient      /lib64/security/pam_deviceauthgrant.so [debug] [qrcode] [agentconf=/full/path/to/pam_deviceauthgrant/conf/file.json]
 auth    required        pam_deny.so
 ```
 
