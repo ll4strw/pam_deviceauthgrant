@@ -1,6 +1,7 @@
 ## Installation
 
 ```
+autoreconf --install
 ./configure [--with-pam-mod-dir=/lib64/security]
 make
 make install
