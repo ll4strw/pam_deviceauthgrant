@@ -66,7 +66,9 @@ pamtester deviceauthgrant USERNAME acct_mgmt
 Login on a GNU/Linux workstation via the GNOME Display Manager (GDM) and `pam_deviceauthgrant`.
 
 1. Install `pam_deviceauthgrant`
+
 2. Modify the pam login flow used by GDM. On my test Fedora 37 workstation this is located at `/etc/pam.d/gdm-password`
+
    ```
    # my system has two pre-existing local accounts which I exclude from
    # the pam_deviceauthgrant routines
@@ -77,7 +79,8 @@ Login on a GNU/Linux workstation via the GNOME Display Manager (GDM) and `pam_de
    account sufficient      /lib64/security/pam_deviceauthgrant.so
    ```
 3. Modify the GDM shell theme as described for instance here https://wiki.archlinux.org/title/GDM
-   Most importantly, make sure that ypu modify  `gnome-shell.css` to include something like
+   Most importantly, make sure that you modify  `gnome-shell.css` to include something like
+   
    ```
    .login-dialog-prompt-layout {
    /* .. all other things here .. */
@@ -92,5 +95,28 @@ Login on a GNU/Linux workstation via the GNOME Display Manager (GDM) and `pam_de
     white-space: pre-wrap;
    }
    ```
-4. systemctl restart gdm   
+4. systemctl restart gdm
+
 5. Make sure your workstation is connected to the internet
+
+6. Login
+
+### Use case 2
+
+Login on an iRODS system `pam_deviceauthgrant`. The advantage here is to delegate the login process, including where
+applicable multifactor authentication (MFA), to your institution  identity provider (IdP).
+
+1. Clone `pam_deviceauthgrant`
+
+2. Modify `deviceauthgrant.c` to add your iRODS user creation logics in `pam_sm_acct_mgmt`. Recompile
+
+3. Modify the pam login flow used by iRODS. This is located at `/etc/pam.d/irods`, for instance
+
+   ```
+   auth    required        pam_nologin.so
+   auth    sufficient      /lib64/security/pam_deviceauthgrant.so
+   auth    required        pam_deny.so
+   account sufficient      /lib64/security/pam_deviceauthgrant.so
+   ```
+
+4. Login
