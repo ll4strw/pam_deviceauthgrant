@@ -38,6 +38,7 @@
 #include <pwd.h>
 #include <sys/wait.h>
 #define ECHO "/bin/echo"
+#define USERADD "/usr/sbin/useradd"
 
 
 //added as in PAM docs
@@ -520,8 +521,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh,  int flags,  int argc,  c
       if (useradd_pid == 0) {
 	// useradd
 	DBG(("Trying adding user %s to system",user));
-	char *useradd_argv[6] = {"","useradd","-m", "-U ", (char*)user,NULL};
-	res=execve(ECHO, useradd_argv,NULL);
+	char *useradd_argv[5] = {"","-m", "-U", (char*)user,NULL};
+	res=execve(USERADD, useradd_argv,NULL);
 	if (res == -1){
 	  DBG(("execve terminated unsuccessfully"));
 	  exit(EXIT_FAILURE);
@@ -552,6 +553,66 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh,  int flags,  int argc,  
   return PAM_SUCCESS;
 }
 PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh,  int flags,  int argc,  const char **argv) {
+  int res;
+  struct lib_cfg cfg;
+    
+  const char *user;
+  const struct passwd *pwd_entry;
+
+  pid_t useradd_pid, w;
+  int status;
+
+
+
+  parse_lib_cfg(flags, argc, argv, &cfg);
+
+  
+  res = pam_get_user(pamh, &user, NULL);
+  if (res != PAM_SUCCESS){
+    DBG (("Cannot get user"));
+    return res;
+  }
+  
+  pwd_entry = getpwnam(user);
+  if (!pwd_entry)
+    {
+      DBG(("User %s not found..creating it",user));
+
+      useradd_pid = fork();
+      if (useradd_pid == -1) {
+        DBG(("Unable to fork useradd process"));
+	return PAM_PERM_DENIED;
+      }
+
+      if (useradd_pid == 0) {
+	// useradd
+	DBG(("Trying adding user %s to system",user));
+	char *useradd_argv[5] = {"","-m", "-U", (char*)user,NULL};
+	res=execve(USERADD, useradd_argv,NULL);
+	if (res == -1){
+	  DBG(("execve terminated unsuccessfully"));
+	  exit(EXIT_FAILURE);
+	}
+      }
+
+      w = waitpid(useradd_pid, &status,FALSE);
+      if (w == -1) {
+	DBG(("Wait for useradd terminated unsuccessfully"));
+	return PAM_PERM_DENIED;
+      }
+
+      if (WIFEXITED(status) && !WEXITSTATUS(status)) {
+	DBG(("Useradd terminated successfully"));
+	// useradd is done successfully
+	return PAM_SUCCESS;
+      }
+
+      // useradd failed for some reason
+      DBG(("Error: could not add user %s to system",user));
+      return PAM_PERM_DENIED;
+    }
+
+  // no need to add user  
   return PAM_SUCCESS;
 }
 
@@ -631,12 +692,12 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,int argc, const
   if (cfg.qrcode){
     char* qrc = make_qr(loginurl);
 
-    const char *prompt_tmpl="\n\nTo continue, login to\n\n\t%s\n\nor scan the QR code below\n\n%s";
+    const char *prompt_tmpl="\n\nScan QR to login\n\n%s";
 	  
-    tmpl_len=snprintf(NULL,0,prompt_tmpl,loginurl,qrc);
+    tmpl_len=snprintf(NULL,0,prompt_tmpl,qrc);
     prompt_message = malloc(tmpl_len+1);
 	  
-    sprintf(prompt_message, prompt_tmpl,loginurl,qrc );
+    sprintf(prompt_message, prompt_tmpl,qrc );
 
 	  
     if (!prompt_message){
@@ -645,7 +706,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,int argc, const
     }
     free(qrc);
   } else {
-    const char *prompt_tmpl = "\n\nTo continue, login to\n\n\t%s\n\n";
+    const char *prompt_tmpl = "\n\nLogin at\n\n%s";
 
     
     tmpl_len=snprintf(NULL,0,prompt_tmpl,loginurl);
@@ -668,9 +729,8 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,int argc, const
   //display_pam_info_unbuffered(pamh, prompt_message);
 	
 	
-
   char *resp;
-  res = pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &resp, "Once you have completed the login process, press Enter");
+  res = pam_prompt(pamh, PAM_PROMPT_ECHO_ON, &resp, "After login press Enter");
   DBG (("User entered: %s\n",resp));
   free(resp);
 
@@ -744,8 +804,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,int argc, const
 
     //auth server returned an error message when requesting an idtoken
     DBG (("Authentication failure; %s\n", errormsg));
+    // no reason to wait
+    goto failure;
     // wait, perhaps the user needs more time to authenticate
-    sleep(TOKEN_REQUEST_TIME_STEP);
+    // sleep(TOKEN_REQUEST_TIME_STEP);
 		
   }
 

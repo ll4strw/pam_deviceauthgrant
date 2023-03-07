@@ -722,7 +722,7 @@ char* make_qr(char* str)
     .compact = false,
     .border = 1,
     .invert = false,
-    .plain = false
+    .plain = true
   };
 
 
