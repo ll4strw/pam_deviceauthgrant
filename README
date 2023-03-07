@@ -44,7 +44,7 @@ cat /etc/pam.d/deviceauthgrant
 auth    required        pam_nologin.so
 auth    sufficient      /lib64/security/pam_deviceauthgrant.so [debug] [qrcode] [agentconf=/full/path/to/pam_deviceauthgrant/conf/file.json]
 auth    required        pam_deny.so
-
+account sufficient      /lib64/security/pam_deviceauthgrant.so
 
 If agentconf is not specified, deviceauthgrant.so will try parsing
 /etc/deviceauthgrant.json
@@ -78,6 +78,9 @@ For instance, with Keycloak IAM
 Test
 ----
 
-pamtester deviceauthgrant <USERNAME> authenticate
+```
+pamtester deviceauthgrant USERNAME authenticate
+pamtester deviceauthgrant USERNAME acct_mgmt
 
+```
 
