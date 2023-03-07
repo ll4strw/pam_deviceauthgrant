@@ -16,4 +16,4 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 SUBDIRS = src
-dist_doc_DATA = README COPYING CC01_LICENSE MIT_LICENSE
+dist_doc_DATA = README.md COPYING CC01_LICENSE MIT_LICENSE
