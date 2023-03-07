@@ -103,7 +103,7 @@ Login on a GNU/Linux workstation via the GNOME Display Manager (GDM) and `pam_de
 
 ### Use case 2
 
-Login on an iRODS system `pam_deviceauthgrant`. The advantage here is to delegate the login process, including where
+Login on an @irods/irods system with `pam_deviceauthgrant`. The advantage here is to delegate the login process, including where
 applicable multifactor authentication (MFA), to your institution  identity provider (IdP).
 
 1. Clone `pam_deviceauthgrant`
