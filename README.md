@@ -61,3 +61,36 @@ pamtester deviceauthgrant USERNAME authenticate
 pamtester deviceauthgrant USERNAME acct_mgmt
 ```
 
+### Use case 1
+
+Login on a GNU/Linux workstation via the GNOME Display Manager (GDM) and `pam_deviceauthgrant`.
+
+1. Install `pam_deviceauthgrant`
+2. Modify the pam login flow used by GDM. On my test Fedora 37 workstation this is located at `/etc/pam.d/gdm-password`
+   ```
+   # my system has two pre-existing local accounts which I exclude from
+   # the pam_deviceauthgrant routines
+   auth [success=2 default=ignore] pam_succeed_if.so uid in 0:1000
+   auth    sufficient      /lib64/security/pam_deviceauthgrant.so qrcode
+   auth    required        pam_deny.so
+   account [success=1 default=ignore] pam_succeed_if.so uid in 0:1000
+   account sufficient      /lib64/security/pam_deviceauthgrant.so
+   ```
+3. Modify the GDM shell theme as described for instance here https://wiki.archlinux.org/title/GDM
+   Most importantly, make sure that ypu modify  `gnome-shell.css` to include something like
+   ```
+   .login-dialog-prompt-layout {
+   /* .. all other things here .. */
+   width: 100%!important;
+   }
+
+    /* this is needed to display the QR code correctly */
+   .login-dialog-message {
+    display: block;
+    unicode-bidi: embed;
+    font-family: monospace;
+    white-space: pre-wrap;
+   }
+   ```
+4. systemctl restart gdm   
+5. Make sure your workstation is connected to the internet
