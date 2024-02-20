@@ -44,8 +44,8 @@ cat /full/path/to/pam_deviceauthgrant/conf/file.json
 For instance, with Keycloak IAM
 
 {
-    "dev_auth_url": "https://YOUR_KC_INSTANCE/auth/realms/YOUR_REALM_NAME/protocol/openid-connect/auth/device",
-    "token_url": "https://YOUR_KC_INSTANCE/auth/realms/YOUR_REALM_NAME/protocol/openid-connect/token",
+    "dev_auth_url": "https://YOUR_KC_INSTANCE/realms/YOUR_REALM_NAME/protocol/openid-connect/auth/device",
+    "token_url": "https://YOUR_KC_INSTANCE/realms/YOUR_REALM_NAME/protocol/openid-connect/token",
     "client_secret": "YOUR-CLIENT-SECRET",
     "ca_certs": "/etc/pki/tls/certs/ca-bundle.crt",
     "client_scopes": "ANY-VALID-SCOPES",
