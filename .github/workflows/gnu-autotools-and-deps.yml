@@ -1,0 +1,40 @@
+name: GNU Autotools and Dependencies
+on: [push, pull_request]
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+concurrency:
+  group: ${{format('{0}:{1}:{2}', github.repository, github.ref, github.workflow)}}
+  cancel-in-progress: true
+
+jobs:
+  GNU-platform:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: set up GNU auto tools
+      run: |
+        sudo apt install -y autotools-dev
+        sudo apt install -y autoconf
+        sudo apt install -y libtool
+
+    - name: set up dependencies
+      run: |
+        sudo apt install -y libcurl4-openssl-dev
+        sudo apt install -y libssl-dev
+        sudo apt install -y libpam-dev
+        sudo apt install -y libqrencode-dev
+        sudo apt install -y make
+
+    - name: test autotools
+      run: |
+        autoconf -V
+        automake --version
+
+    - name: test build
+      run: |
+        autoreconf --install
+        ./configure
+        make
